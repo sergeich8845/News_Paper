@@ -1,5 +1,5 @@
-# Импортируем класс, который говорит нам о том,
-# что в этом представлении мы будем выводить список объектов из БД
+from django.contrib.auth.mixins import PermissionRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin
 from datetime import datetime
 from django.views.generic import ListView, DetailView
 from .models import News
@@ -10,8 +10,13 @@ from .filters import NewsFilter
 from django.urls import reverse_lazy
 from django.views.generic.edit import CreateView, UpdateView, DeleteView
 from .forms import NewsForm
-
-
+from django.contrib.auth.models import User
+from .models import BaseRegisterForm
+from django.views.generic import TemplateView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import Group
+from django.shortcuts import redirect
 
 class NewsListView(ListView):
     model = News
@@ -67,35 +72,64 @@ class NewsSearchView(FilterView):
     template_name = 'news_search.html'
     filterset_class = NewsFilter
 
-class NewsCreateView(CreateView):
+class NewsCreateView(PermissionRequiredMixin, CreateView):
     model = News
     form_class = NewsForm
     template_name = 'news_form.html'
+    permission_required = 'simpleapp.add_news'
     success_url = reverse_lazy('news_list')
+    login_url = '/accounts/'  # URL для перенаправления неаутентифицированных пользователей
 
     def form_valid(self, form):
         news = form.save(commit=False)
         news.type = 'новость'
         return super().form_valid(form)
 
-class ArticleCreateView(CreateView):
+class ArticleCreateView(PermissionRequiredMixin, CreateView):
     model = News
     form_class = NewsForm
     template_name = 'news_form.html'
+    permission_required = 'simpleapp.add_post'
     success_url = reverse_lazy('news_list')
+    login_url = '/accounts/'  # URL для перенаправления неаутентифицированных пользователей
 
     def form_valid(self, form):
         article = form.save(commit=False)
         article.type = 'статья'
         return super().form_valid(form)
 
-class NewsUpdateView(UpdateView):
+class NewsUpdateView(PermissionRequiredMixin, UpdateView):
     model = News
     form_class = NewsForm
     template_name = 'news_form.html'
+    permission_required = 'simpleapp.change_news'
     success_url = reverse_lazy('news_list')
+    login_url = '/accounts/'  # URL для перенаправления неаутентифицированных пользователей
 
-class NewsDeleteView(DeleteView):
+class NewsDeleteView(LoginRequiredMixin, DeleteView):
     model = News
     template_name = 'news_confirm_delete.html'
     success_url = reverse_lazy('news_list')
+    login_url = '/accounts/'  # URL для перенаправления неаутентифицированных пользователей
+
+class BaseRegisterView(CreateView):
+    model = User
+    form_class = BaseRegisterForm
+    success_url = '/news/'
+
+class IndexView(LoginRequiredMixin, TemplateView):
+    template_name = '/index/'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['is_not_authors'] = not self.request.user.groups.filter(name='authors').exists()
+        return context
+
+@login_required
+def upgrade_me(request):
+    user = request.user
+    authors_group = Group.objects.get(name='authors')
+    if not request.user.groups.filter(name='authors').exists():
+        authors_group.user_set.add(user)
+    return redirect('/news/')
+

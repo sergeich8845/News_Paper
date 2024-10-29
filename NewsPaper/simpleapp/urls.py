@@ -1,8 +1,12 @@
+from django.urls import path, include
+from django.contrib.auth.views import LoginView, LogoutView
+from .views import BaseRegisterView
 from django.urls import path
+from django.contrib import admin
 # Импортируем созданное нами представление
 from .views import (NewsList, NewsListView, NewsDetail,
     NewsCreateView, ArticleCreateView, NewsUpdateView, NewsDeleteView,
-    NewsSearchView
+    NewsSearchView, IndexView, upgrade_me
 )
 
 
@@ -25,4 +29,15 @@ urlpatterns = [
    path('articles/<int:pk>/edit/', NewsUpdateView.as_view(), name='article_edit'),
    path('articles/<int:pk>/delete/', NewsDeleteView.as_view(), name='article_delete'),
    path('news/search/', NewsSearchView.as_view(), name='news_search'),
+   path('index/', IndexView.as_view(template_name = 'account/index.html')),
+   path('login/',
+         LoginView.as_view(template_name = 'account/login.html'),
+         name='login'),
+   path('logout/',
+         LogoutView.as_view(template_name = 'account/logout.html'),
+         name='logout'),
+   path('signup/',
+         BaseRegisterView.as_view(template_name = 'account/signup.html'),
+         name='signup'),
+   path('upgrade/', upgrade_me, name = 'upgrade')
 ]

@@ -42,7 +42,11 @@ INSTALLED_APPS = [
     'simpleapp',
     'django.contrib.sites',
     'django.contrib.flatpages',
-    'django_filters'
+    'django_filters',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.yandex',
 ]
 
 SITE_ID = 1
@@ -56,6 +60,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.contrib.flatpages.middleware.FlatpageFallbackMiddleware',
+    'allauth.account.middleware.AccountMiddleware',  # Добавляем AccountMiddleware
 ]
 
 ROOT_URLCONF = 'NewsPaper.urls'
@@ -134,3 +139,20 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 STATICFILES_DIRS = [
     BASE_DIR / "static"
 ]
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+# Настройки allauth
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_UNIQUE_EMAIL = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+
+
+LOGIN_URL = '/accounts/login/'  # URL для перенаправления неавторизованных пользователей
+LOGIN_REDIRECT_URL = '/news/'  # URL для перенаправления после успешного входа в систему
+

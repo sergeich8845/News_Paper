@@ -1,0 +1,13 @@
+{% extends 'flatpages/default.html' %}
+{% load socialaccount %}
+
+{% block content %}
+  <h2>Login</h2>
+  <form method="post" action="{% url 'account_login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Login</button>
+  </form>
+  <a href="/signup/">Sign Up</a>
+  <a href="{% provider_login_url 'yandex' %}">Login with Yandex</a>
+{% endblock %}
